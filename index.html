@@ -732,6 +732,7 @@ button,input,select,textarea{font-family:var(--fn)}
 /* Wilaya select */
 select option{background:var(--card);color:var(--tx)}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -1019,6 +1020,12 @@ select option{background:var(--card);color:var(--tx)}
   <div class="confirm-box">
     <h3 data-key="pay_confirm_title">تأكيد التسديد</h3>
     <p id="pay-confirm-msg" data-key="pay_confirm_msg">هل تريد تأكيد عملية البيع؟</p>
+    <div style="margin:10px 0 4px">
+      <label style="font-size:.8rem;color:var(--mu);display:block;margin-bottom:5px">📍 الولاية (اختياري)</label>
+      <select id="pay-wilaya" style="width:100%;padding:8px 12px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--bg);color:var(--tx);font-size:.85rem;outline:none">
+        <option value="">-- اختر الولاية --</option>
+      </select>
+    </div>
     <div class="confirm-btns">
       <button class="btn btn-ok" onclick="finalizePay()">تأكيد</button>
       <button class="btn btn-out" onclick="closeModal('pay-confirm')">إغلاق</button>
@@ -1978,7 +1985,7 @@ function addToCart(prod){
     if(ex.qty>=prod.qty){toast(t('toast_cart_max')+prod.qty,'wa');Snd.err();return;}
     ex.qty++;ex.total=ex.qty*ex.price;
   } else {
-    State.cart.push({id:prod.id,name:prod.name,price:prod.sellPrice,qty:1,total:prod.sellPrice,buyPrice:prod.buyPrice||0});
+    State.cart.push({id:prod.id,name:prod.name,type:prod.type||'',price:prod.sellPrice,qty:1,total:prod.sellPrice,buyPrice:prod.buyPrice||0});
   }
   DB.s('cart_saved',State.cart);renderCart();toast(t('toast_cart_added')+': '+prod.name,'ok',1500);
 }
@@ -2043,11 +2050,15 @@ function finalizePay(){
   const buyTotal=State.cart.reduce((s,i)=>s+(i.buyPrice*i.qty),0);
   const profit=total-buyTotal;
   const inv='#'+String(State.invoiceCounter).padStart(3,'0');
+  const wilaya=document.getElementById('pay-wilaya')?.value||'';
   const sale={
     id:Date.now(),invoiceNum:inv,items:[...State.cart],
     total,buyTotal,profit,date:new Date().toISOString(),
-    type:'cash',user:State.currentUser?.name||'admin'
+    type:'cash',user:State.currentUser?.name||'admin',
+    wilaya:wilaya||undefined
   };
+  // reset wilaya field
+  const pw=document.getElementById('pay-wilaya');if(pw)pw.value='';
   State.sales.push(sale);State.todaySales.push(sale);
   State.cart.forEach(item=>{
     const p=State.products.find(x=>x.id===item.id);
@@ -2102,7 +2113,7 @@ function openDeliverModal(){
   
   if(State.cart.length){
     // Product names joined
-    const prodNames=State.cart.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(' | ');
+    const prodNames=State.cart.map(i=>i.name+(i.type?' - '+i.type:'')+(i.qty>1?' ×'+i.qty:'')).join(' | ');
     const cartTotal=State.cart.reduce((s,i)=>s+i.total,0);
     
     const prodTypeEl=document.getElementById('del-prod-type');
@@ -2195,7 +2206,7 @@ function saveDebt(){
   const buyTotal=State.cart.reduce((s,i)=>s+(i.buyPrice*i.qty),0);
   // Auto-fill debt type from cart items if not provided
   if(!dtype&&State.cart.length){
-    dtype=State.cart.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(', ');
+    dtype=State.cart.map(i=>i.name+(i.type?' - '+i.type:'')+(i.qty>1?' ×'+i.qty:'')).join(', ');
   }
   const inv='#'+String(State.invoiceCounter).padStart(3,'0');
   const debt={
@@ -2470,7 +2481,7 @@ function renderDebtsTable(){
   const sellTotal=d.amount||d.cartTotal||0;
   const profit=sellTotal-buyTotal;
   // Build product/debt type label
-  const debtTypeLabel=d.debtType||(d.items&&d.items.length?d.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(', '):'-');
+  const debtTypeLabel=d.debtType||(d.items&&d.items.length?d.items.map(i=>i.name+(i.type?' - '+i.type:'')+(i.qty>1?' ×'+i.qty:'')).join(', '):'-');
   return `
 <tr>
   <td><strong>${d.name}</strong></td><td>${d.phone}</td>
@@ -2603,7 +2614,7 @@ function renderDeliveryTable(){
 <tr>
   <td><strong>${d.name}</strong></td><td>${d.phone}</td>
   <td style="color:var(--mu);font-size:.82rem">${d.wilaya||'-'}</td>
-  <td>${d.prodType||d.items?.map(i=>i.name).join(', ')||'-'}</td>
+  <td>${d.prodType||d.items?.map(i=>i.name+(i.type?' - '+i.type:'')).join(', ')||'-'}</td>
   <td>${d.company||'-'}</td>
   <td style="color:var(--er)">${buyTotal.toFixed(2)} ${State.settings.currency}</td>
   <td style="color:var(--pr)">${sellTotal.toFixed(2)} ${State.settings.currency}</td>
@@ -2799,6 +2810,7 @@ function renderBusiness(){
   <button class="tab-btn" onclick="bizTab('month',this)">${t('tab_month')}</button>
   <button class="tab-btn" onclick="bizTab('year',this)">${t('tab_year')}</button>
   <button class="tab-btn" onclick="bizTab('prods',this)">${t('tab_products_rep')}</button>
+  <button class="tab-btn" onclick="bizTab('wilayas',this)">🗺️ الولايات</button>
 </div>
 <div id="biz-content"></div>
 <div style="margin-top:14px;padding:14px;background:var(--card);border-radius:var(--r);border:1px solid var(--bd)">
@@ -2817,6 +2829,149 @@ function bizTab(tab,btn){
   else if(tab==='month')c.innerHTML=renderMonthReport();
   else if(tab==='year')c.innerHTML=renderYearReport2();
   else if(tab==='prods')c.innerHTML=renderProdsReport();
+  else if(tab==='wilayas'){c.innerHTML=renderWilayasReport();initWilayaCharts();}
+}
+
+function renderWilayasReport(){
+  // جمع بيانات الولايات من التوصيلات والديون والمبيعات النقدية
+  const wMap={};
+  State.deliveries.forEach(d=>{
+    if(!d.wilaya)return;
+    if(!wMap[d.wilaya])wMap[d.wilaya]={name:d.wilaya,orders:0,revenue:0,debts:0,deliveries:0,cash:0};
+    wMap[d.wilaya].orders++;
+    wMap[d.wilaya].deliveries++;
+    wMap[d.wilaya].revenue+=(d.cartTotal||d.prodPrice||0);
+  });
+  State.internalDebts.forEach(d=>{
+    if(!d.wilaya)return;
+    if(!wMap[d.wilaya])wMap[d.wilaya]={name:d.wilaya,orders:0,revenue:0,debts:0,deliveries:0,cash:0};
+    wMap[d.wilaya].orders++;
+    wMap[d.wilaya].debts++;
+    wMap[d.wilaya].revenue+=(d.cartTotal||d.amount||0);
+  });
+  State.sales.filter(s=>s.type==='cash'&&s.wilaya).forEach(s=>{
+    if(!wMap[s.wilaya])wMap[s.wilaya]={name:s.wilaya,orders:0,revenue:0,debts:0,deliveries:0,cash:0};
+    wMap[s.wilaya].orders++;
+    wMap[s.wilaya].cash++;
+    wMap[s.wilaya].revenue+=(s.total||0);
+  });
+  const wilayas=Object.values(wMap).sort((a,b)=>b.orders-a.orders);
+  const total=wilayas.reduce((s,w)=>s+w.orders,0)||1;
+  const cur=State.settings.currency;
+  if(!wilayas.length)return`<div style="text-align:center;padding:40px;color:var(--mu)">📭 لا توجد بيانات بعد</div>`;
+
+  // الألوان المتباينة
+  const COLORS=['#6c63ff','#ff4757','#00c896','#ffa502','#00d4ff','#ff6b9d','#2ed573','#eccc68','#a29bfe','#fd79a8','#55efc4','#fdcb6e','#e17055','#74b9ff','#b2bec3'];
+
+  const rows=wilayas.map((w,i)=>`
+    <tr>
+      <td style="padding:9px 10px"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${COLORS[i%COLORS.length]};margin-left:6px;vertical-align:middle"></span><strong>${w.name}</strong></td>
+      <td style="padding:9px 10px;text-align:center;font-weight:700;color:var(--pr)">${w.orders}</td>
+      <td style="padding:9px 10px;text-align:center;color:var(--in)">${w.deliveries}</td>
+      <td style="padding:9px 10px;text-align:center;color:var(--wa)">${w.debts}</td>
+      <td style="padding:9px 10px;text-align:center;color:var(--ok)">${w.cash||0}</td>
+      <td style="padding:9px 10px;text-align:center;font-weight:700;color:var(--ok)">${w.revenue.toFixed(0)} ${cur}</td>
+      <td style="padding:9px 10px;text-align:center">
+        <div style="background:var(--bg);border-radius:99px;height:8px;overflow:hidden;min-width:60px">
+          <div style="height:100%;width:${Math.round(w.orders/total*100)}%;background:${COLORS[i%COLORS.length]};border-radius:99px"></div>
+        </div>
+        <span style="font-size:.72rem;color:var(--mu);margin-top:2px;display:block">${Math.round(w.orders/total*100)}%</span>
+      </td>
+    </tr>`).join('');
+
+  return`
+<div style="margin-top:14px">
+  <!-- عنوان -->
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+    <span style="font-size:1.2rem">🗺️</span>
+    <strong style="font-size:.95rem;color:var(--pr)">تحليل الولايات النشطة</strong>
+    <span style="font-size:.72rem;color:var(--mu);background:var(--bg);padding:2px 8px;border-radius:99px;border:1px solid var(--bd)">${wilayas.length} ولاية</span>
+  </div>
+
+  <!-- الرسومان جنباً إلى جنب -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+    <!-- رسم الأعمدة -->
+    <div style="background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:14px">
+      <div style="font-size:.82rem;font-weight:700;color:var(--mu);margin-bottom:12px;text-align:center">📊 الطلبات حسب الولاية</div>
+      <canvas id="wilaya-bar" height="220"></canvas>
+    </div>
+    <!-- رسم الدائرة -->
+    <div style="background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:14px">
+      <div style="font-size:.82rem;font-weight:700;color:var(--mu);margin-bottom:12px;text-align:center">🥧 النسب المئوية</div>
+      <canvas id="wilaya-pie" height="220"></canvas>
+    </div>
+  </div>
+
+  <!-- جدول تفصيلي -->
+  <div style="background:var(--card);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden">
+    <div style="padding:12px 14px;border-bottom:1px solid var(--bd);background:var(--bg)">
+      <strong style="font-size:.88rem">📋 تفاصيل الولايات</strong>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+        <thead>
+          <tr style="background:var(--bg);color:var(--mu);font-size:.75rem">
+            <th style="padding:8px 10px;text-align:right;font-weight:700">الولاية</th>
+            <th style="padding:8px 10px;text-align:center;font-weight:700">الطلبات</th>
+            <th style="padding:8px 10px;text-align:center;font-weight:700">توصيل</th>
+            <th style="padding:8px 10px;text-align:center;font-weight:700">ديون</th>
+            <th style="padding:8px 10px;text-align:center;font-weight:700">نقدي</th>
+            <th style="padding:8px 10px;text-align:center;font-weight:700">الإيرادات</th>
+            <th style="padding:8px 10px;text-align:center;font-weight:700">النسبة</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- بيانات للرسوم مخفية -->
+  <script id="wilaya-data" type="application/json">${JSON.stringify(wilayas.map((w,i)=>({name:w.name,orders:w.orders,pct:Math.round(w.orders/total*100),color:COLORS[i%COLORS.length]})))}<\/script>
+</div>`;
+}
+
+function initWilayaCharts(){
+  setTimeout(()=>{
+    const raw=document.getElementById('wilaya-data');
+    if(!raw)return;
+    const data=JSON.parse(raw.textContent);
+    const labels=data.map(d=>d.name);
+    const values=data.map(d=>d.orders);
+    const colors=data.map(d=>d.color);
+
+    // رسم الأعمدة
+    const barCtx=document.getElementById('wilaya-bar');
+    if(barCtx&&window.Chart){
+      new Chart(barCtx,{
+        type:'bar',
+        data:{labels,datasets:[{data:values,backgroundColor:colors,borderRadius:6,borderSkipped:false}]},
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw} طلب`}}},
+          scales:{
+            x:{ticks:{color:'#6b7280',font:{size:10},maxRotation:35},grid:{display:false}},
+            y:{ticks:{color:'#6b7280',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}
+          }
+        }
+      });
+    }
+
+    // رسم الدائرة
+    const pieCtx=document.getElementById('wilaya-pie');
+    if(pieCtx&&window.Chart){
+      new Chart(pieCtx,{
+        type:'doughnut',
+        data:{labels,datasets:[{data:values,backgroundColor:colors,borderWidth:3,borderColor:'var(--card)',hoverOffset:8}]},
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{
+            legend:{position:'bottom',labels:{color:'#6b7280',font:{size:10},boxWidth:12,padding:8}},
+            tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} طلب (${data[ctx.dataIndex].pct}%)`}}
+          }
+        }
+      });
+    }
+  },100);
 }
 
 function renderDayReport(){
@@ -4372,6 +4527,7 @@ window.addEventListener('load',()=>{
   // Wilaya selects
   fillWilayas(document.getElementById('del-wilaya'));
   fillWilayas(document.getElementById('dbt-wilaya'));
+  fillWilayas(document.getElementById('pay-wilaya'));
   // VKB keyboard shortcut
   document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='k'){e.preventDefault();toggleVKB();}});
   // Auto-login
