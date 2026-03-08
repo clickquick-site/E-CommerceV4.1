@@ -1809,12 +1809,19 @@ function doLogin(){
   // البحث عن المستخدم المطابق باسم المستخدم وكلمة المرور
   u=State.users.find(x=>x.username===user&&x.password===pass);
 
-  // إذا لم يُوجد وكان المستخدم admin والبيانات افتراضية (للدخول الأول فقط)
-  if(!u&&user==='admin'){
-    const adminUser=State.users.find(x=>x.role==='admin');
-    if(adminUser&&adminUser.password==='1234'&&(pass===''||pass==='1234')){
+  // إذا لم يُوجد — تحقق من المدير الافتراضي
+  if(!u){
+    const adminUser=State.users.find(x=>x.role==='admin')||State.users[0];
+    if(adminUser&&(user===adminUser.username||user==='admin')&&pass===adminUser.password){
       u=adminUser;
     }
+  }
+
+  // إذا لا يوجد أي مستخدم في القاعدة — أنشئ الافتراضي
+  if(!u&&State.users.length===0){
+    u={id:1,username:'admin',password:'1234',role:'admin',name:'المدير'};
+    State.users.push(u);
+    DB.s('users',State.users);
   }
 
   if(u){
