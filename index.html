@@ -2494,13 +2494,17 @@ function renderDebtsTable(){
   // بناء عرض نوع الدين على سطرين
   const debtTypeHTML=(()=>{
     const items=d.items&&d.items.length?d.items:null;
+    // إذا كانت العناصر موجودة نستخدمها مباشرة للحصول على الاسم والنوع
+    if(items){
+      return items.map(i=>`<strong style="color:var(--in)">${i.name}${i.qty>1?' ×'+i.qty:''}</strong>${i.type?`<br><span style="font-size:.73rem;color:var(--pr)">${i.type}</span>`:''}`).join('<br>');
+    }
+    // إذا لم تكن عناصر نستخدم debtType مع تقسيم بـ " - "
     if(d.debtType){
       const parts=d.debtType.split(' - ');
       return parts.length>1
         ?`<strong style="color:var(--in)">${parts[0]}</strong><br><span style="font-size:.73rem;color:var(--pr)">${parts.slice(1).join(' - ')}</span>`
         :`<strong style="color:var(--in)">${d.debtType}</strong>`;
     }
-    if(items)return items.map(i=>`<strong style="color:var(--in)">${i.name}</strong>${i.type?`<br><span style="font-size:.73rem;color:var(--pr)">${i.type}</span>`:''}`).join('<br>');
     return '-';
   })();
   return `
