@@ -1932,8 +1932,7 @@ function goPage(page){
     renderSalePage();
   } else {
     menuBtn.style.display='none';backBtn.style.display='none';
-    titleHdr.style.display='block';storeHdr.style.display='none';
-    titleHdr.textContent=t(PAGE_TITLES[page]||'');
+    titleHdr.style.display='none';storeHdr.style.display='block';
     showScrollBtns(true);
     if(page==='inventory')renderInventory();
     else if(page==='debts')renderDebts();
@@ -2492,11 +2491,23 @@ function renderDebtsTable(){
   const profit=sellTotal-buyTotal;
   // Build product/debt type label
   const debtTypeLabel=d.debtType||(d.items&&d.items.length?d.items.map(i=>i.name+(i.type?' - '+i.type:'')+(i.qty>1?' ×'+i.qty:'')).join(', '):'-');
+  // بناء عرض نوع الدين على سطرين
+  const debtTypeHTML=(()=>{
+    const items=d.items&&d.items.length?d.items:null;
+    if(d.debtType){
+      const parts=d.debtType.split(' - ');
+      return parts.length>1
+        ?`<strong style="color:var(--in)">${parts[0]}</strong><br><span style="font-size:.73rem;color:var(--pr)">${parts.slice(1).join(' - ')}</span>`
+        :`<strong style="color:var(--in)">${d.debtType}</strong>`;
+    }
+    if(items)return items.map(i=>`<strong style="color:var(--in)">${i.name}</strong>${i.type?`<br><span style="font-size:.73rem;color:var(--pr)">${i.type}</span>`:''}`).join('<br>');
+    return '-';
+  })();
   return `
 <tr>
   <td><strong>${d.name}</strong></td><td>${d.phone}</td>
   <td style="color:var(--mu);font-size:.82rem">${d.wilaya||'-'}</td>
-  <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--in);font-weight:600" title="${debtTypeLabel}">${debtTypeLabel}</td>
+  <td style="max-width:120px">${debtTypeHTML}</td>
   <td style="color:var(--er)">${buyTotal.toFixed(2)} ${State.settings.currency}</td>
   <td style="color:var(--pr)">${sellTotal.toFixed(2)} ${State.settings.currency}</td>
   <td style="color:var(--ok);font-weight:700">${profit.toFixed(2)} ${State.settings.currency}</td>
@@ -2624,7 +2635,15 @@ function renderDeliveryTable(){
 <tr>
   <td><strong>${d.name}</strong></td><td>${d.phone}</td>
   <td style="color:var(--mu);font-size:.82rem">${d.wilaya||'-'}</td>
-  <td>${d.prodType||d.items?.map(i=>i.name+(i.type?' - '+i.type:'')).join(', ')||'-'}</td>
+  <td>${(()=>{
+    const items=d.items&&d.items.length?d.items:null;
+    if(d.prodType){
+      const parts=d.prodType.split(' - ');
+      return parts.length>1?`<strong>${parts[0]}</strong><br><span style="font-size:.75rem;color:var(--pr)">${parts.slice(1).join(' - ')}</span>`:d.prodType;
+    }
+    if(items)return items.map(i=>`<strong>${i.name}</strong>${i.type?`<br><span style="font-size:.75rem;color:var(--pr)">${i.type}</span>`:''}`).join('<br>');
+    return '-';
+  })()}</td>
   <td>${d.company||'-'}</td>
   <td style="color:var(--er)">${buyTotal.toFixed(2)} ${State.settings.currency}</td>
   <td style="color:var(--pr)">${sellTotal.toFixed(2)} ${State.settings.currency}</td>
