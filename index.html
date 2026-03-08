@@ -1963,7 +1963,7 @@ function renderProducts(filter=''){
   prods.forEach(p=>{
     const div=document.createElement('div');
     div.className='product-card'+(p.qty<=0?' oos':'');
-    div.innerHTML=`<div class="pc-name">${p.name}</div><div class="pc-price">${p.sellPrice} ${State.settings.currency}</div><div class="pc-stock ${p.qty<=0?'zero':p.qty<=5?'low':''}">${p.qty<=0?t('status_oos'):p.qty<=5?`${t('status_low')}: ${p.qty}`:p.qty}</div>`;
+    div.innerHTML=`<div class="pc-name" style="font-size:1rem;font-weight:900">${p.name}</div>${p.type?`<div style="font-size:.78rem;font-weight:700;color:var(--mu);margin:-2px 0 3px">${p.type}</div>`:''}<div class="pc-price">${p.sellPrice} ${State.settings.currency}</div><div class="pc-stock ${p.qty<=0?'zero':p.qty<=5?'low':''}">${p.qty<=0?t('status_oos'):p.qty<=5?`${t('status_low')}: ${p.qty}`:p.qty}</div>`;
     if(p.qty>0)div.onclick=()=>addToCart(p);
     grid.appendChild(div);
   });
