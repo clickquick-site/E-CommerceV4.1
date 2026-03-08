@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>E-Commerce DZ v4.7.7</title>
+<title>E-Commerce DZ v4.7.8</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700;900&family=Almarai:wght@300;400;700;800&family=Changa:wght@300;400;500;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
@@ -1135,11 +1135,34 @@ select option{background:var(--card);color:var(--tx)}
         <label style="font-weight:700;font-size:.85rem">اسم المستخدم الجديد <span style="color:var(--mu);font-weight:400">(اتركه فارغاً للإبقاء على القديم)</span></label>
         <input type="text" id="eu-new-username" placeholder="اسم المستخدم الجديد" autocomplete="off" style="width:100%;padding:9px 13px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--bg);color:var(--tx);font-size:.9rem;outline:none;margin-top:6px">
       </div>
-      <div class="form-group" style="margin-bottom:14px">
+      <div class="form-group" style="margin-bottom:6px">
         <label style="font-weight:700;font-size:.85rem">الرمز السري الحالي <span style="color:var(--er)">*</span></label>
         <div style="position:relative;margin-top:6px">
           <input type="password" id="eu-old-pass" placeholder="••••" autocomplete="current-password" style="width:100%;padding:9px 38px 9px 13px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--bg);color:var(--tx);font-size:.9rem;outline:none">
           <button onclick="togglePassField('eu-old-pass')" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--mu);font-size:.9rem;padding:2px">👁</button>
+        </div>
+      </div>
+      <!-- رابط نسيت الرمز -->
+      <div style="text-align:left;margin-bottom:14px">
+        <button onclick="toggleForgotPass()" style="background:none;border:none;color:var(--pr);font-size:.78rem;cursor:pointer;text-decoration:underline">🔑 نسيت الرمز السري؟</button>
+      </div>
+      <!-- قسم استرجاع الرمز -->
+      <div id="forgot-pass-section" style="display:none;background:rgba(108,99,255,.06);border:1px dashed rgba(108,99,255,.3);border-radius:var(--rs);padding:13px;margin-bottom:14px">
+        <p style="font-size:.8rem;font-weight:700;color:var(--pr);margin-bottom:10px">🛡️ التحقق من الهوية</p>
+        <!-- السؤال السري -->
+        <div id="secret-q-section" style="margin-bottom:10px">
+          <div id="secret-q-display" style="font-size:.82rem;color:var(--tx);margin-bottom:6px;font-weight:600"></div>
+          <input type="text" id="eu-secret-answer" placeholder="الجواب..." style="width:100%;padding:8px 12px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--bg);color:var(--tx);font-size:.85rem;outline:none;margin-bottom:6px">
+          <button class="btn btn-pr" style="width:100%;font-size:.82rem;padding:7px" onclick="verifySecretAnswer()">✅ تحقق من الجواب</button>
+        </div>
+        <!-- رمز الطوارئ -->
+        <div style="border-top:1px solid var(--bd);padding-top:10px;margin-top:4px">
+          <p style="font-size:.75rem;color:var(--mu);margin-bottom:6px">أو استخدم رمز الطوارئ:</p>
+          <div style="position:relative">
+            <input type="password" id="eu-emergency-code" placeholder="رمز الطوارئ..." style="width:100%;padding:8px 36px 8px 12px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--bg);color:var(--tx);font-size:.85rem;outline:none">
+            <button onclick="togglePassField('eu-emergency-code')" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--mu);font-size:.85rem">👁</button>
+          </div>
+          <button class="btn btn-wa" style="width:100%;font-size:.82rem;padding:7px;margin-top:6px" onclick="verifyEmergencyCode()">🚨 استخدام رمز الطوارئ</button>
         </div>
       </div>
       <div class="form-group" style="margin-bottom:8px">
@@ -1492,7 +1515,7 @@ const T={
     lbl_partial_clear_desc:'يمسح: المبيعات، الديون، سجل العمليات',
     lbl_full_clear_desc:'يمسح كل شيء بما فيه المنتجات والمستخدمين',
     btn_partial_clear:'مسح جزئي',btn_full_clear:'مسح كلي',
-    about_title:'نظام نقاط البيع الذكي',about_version:'الاصدار: v4.7.7',about_year:'تاريخ الاصدار: 2026',
+    about_title:'نظام نقاط البيع الذكي',about_version:'الاصدار: v4.7.8',about_year:'تاريخ الاصدار: 2026',
     about_license:'حالة الترخيص',about_active:'البرنامج مفعل',
     about_dev:'المطور',about_company:'POS DZ | ب.حمزة',about_contact:'واتساب: 0770044850',
     about_rights:'2026 بوس ديزاد - جميع الحقوق محفوظة',
@@ -1571,7 +1594,7 @@ const T={
     lbl_partial_clear_desc:'Supprime: ventes, dettes, historique',
     lbl_full_clear_desc:'Supprime tout: produits, utilisateurs, données',
     btn_partial_clear:'Suppression partielle',btn_full_clear:'Suppression totale',
-    about_title:'Système de point de vente intelligent',about_version:'Version: v4.7.7',about_year:'Date: 2026',
+    about_title:'Système de point de vente intelligent',about_version:'Version: v4.7.8',about_year:'Date: 2026',
     about_license:'Statut de licence',about_active:'Programme activé',
     about_dev:'Développeur',about_company:'POS DZ | B.Hamza',about_contact:'WhatsApp: 0770044850',
     about_rights:'2026 Boss Dizad - Tous droits réservés',
@@ -1783,20 +1806,15 @@ function doLogin(){
 
   let u=null;
 
-  // CASE 1: username is empty OR username is 'admin'
-  // => admin can ALWAYS log in with ANY password, no restriction
-  if(!userInput||user==='admin'){
-    u=State.users.find(x=>x.role==='admin')||State.users[0];
-    if(!u){
-      u={id:1,username:'admin',password:pass||'1234',role:'admin',name:'المدير'};
-      State.users.unshift(u);
+  // البحث عن المستخدم المطابق باسم المستخدم وكلمة المرور
+  u=State.users.find(x=>x.username===user&&x.password===pass);
+
+  // إذا لم يُوجد وكان المستخدم admin والبيانات افتراضية (للدخول الأول فقط)
+  if(!u&&user==='admin'){
+    const adminUser=State.users.find(x=>x.role==='admin');
+    if(adminUser&&adminUser.password==='1234'&&(pass===''||pass==='1234')){
+      u=adminUser;
     }
-    // Always sync the stored password to whatever was entered
-    if(pass) u.password=pass;
-    DB.s('users',State.users);
-  } else {
-    // CASE 2: non-admin username → must match exactly
-    u=State.users.find(x=>x.username===user&&x.password===pass);
   }
 
   if(u){
@@ -3406,6 +3424,32 @@ function renderUsers(){
       تعديل بيانات الدخول
     </button>
   </div>
+
+  <!-- إعداد الأمان -->
+  <div style="background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:20px;margin-top:14px">
+    <strong style="font-size:.88rem;display:block;margin-bottom:14px">🛡️ إعدادات الأمان والاسترجاع</strong>
+    <div class="form-group" style="margin-bottom:12px">
+      <label style="font-size:.82rem;color:var(--mu);font-weight:700">السؤال السري</label>
+      <select id="sec-question" style="width:100%;padding:8px 12px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--bg);color:var(--tx);font-size:.85rem;outline:none;margin-top:5px">
+        <option value="">-- اختر سؤالاً --</option>
+        <option value="mother">ما اسم والدتك؟</option>
+        <option value="city">ما مدينة ميلادك؟</option>
+        <option value="pet">ما اسم حيوانك الأليف؟</option>
+        <option value="school">ما اسم مدرستك الابتدائية؟</option>
+        <option value="friend">ما اسم أفضل صديق لك في الطفولة؟</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label style="font-size:.82rem;color:var(--mu);font-weight:700">الجواب السري</label>
+      <input type="text" id="sec-answer" placeholder="جوابك السري..." style="width:100%;padding:8px 12px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--bg);color:var(--tx);font-size:.85rem;outline:none;margin-top:5px">
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label style="font-size:.82rem;color:var(--mu);font-weight:700">رمز الطوارئ <span style="font-weight:400">(احتفظ به في مكان آمن)</span></label>
+      <input type="text" id="sec-emergency" placeholder="رمز طوارئ من اختيارك..." style="width:100%;padding:8px 12px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--bg);color:var(--tx);font-size:.85rem;outline:none;margin-top:5px">
+    </div>
+    <button class="btn btn-ok" style="width:100%" onclick="saveSecuritySettings()">💾 حفظ إعدادات الأمان</button>
+    ${admin.secretQuestion?`<p style="font-size:.75rem;color:var(--ok);margin-top:8px;text-align:center">✅ إعدادات الأمان محفوظة</p>`:`<p style="font-size:.75rem;color:var(--wa);margin-top:8px;text-align:center">⚠️ لم يتم إعداد الأمان بعد</p>`}
+  </div>
 </div>`;
 }
 
@@ -3442,6 +3486,68 @@ function saveEditUser(){
   notif.innerHTML='<div class="notif-item notif-ok">✅ تم التحديث بنجاح</div>';
   toast(t('toast_saved'),'ok');Snd.save();
   setTimeout(()=>{closeModal('edit-user-modal');renderUsers();},1200);
+}
+
+function saveSecuritySettings(){
+  const admin=State.users.find(u=>u.role==='admin')||State.users[0];if(!admin)return;
+  const q=document.getElementById('sec-question').value;
+  const a=document.getElementById('sec-answer').value.trim();
+  const em=document.getElementById('sec-emergency').value.trim();
+  if(!q||!a){toast('يرجى إدخال السؤال والجواب','er');return;}
+  admin.secretQuestion=q;
+  admin.secretAnswer=a.toLowerCase();
+  if(em)admin.emergencyCode=em;
+  saveState();toast('✅ تم حفظ إعدادات الأمان','ok');Snd.save();
+  renderUsers();
+}
+
+function toggleForgotPass(){
+  const sec=document.getElementById('forgot-pass-section');
+  if(!sec)return;
+  const isHidden=sec.style.display==='none';
+  sec.style.display=isHidden?'block':'none';
+  if(isHidden){
+    const admin=State.users.find(u=>u.role==='admin')||State.users[0];
+    const qMap={mother:'ما اسم والدتك؟',city:'ما مدينة ميلادك؟',pet:'ما اسم حيوانك الأليف؟',school:'ما اسم مدرستك الابتدائية؟',friend:'ما اسم أفضل صديق لك في الطفولة؟'};
+    const qDisplay=document.getElementById('secret-q-display');
+    const qSection=document.getElementById('secret-q-section');
+    if(admin?.secretQuestion){
+      if(qDisplay)qDisplay.textContent='❓ '+( qMap[admin.secretQuestion]||admin.secretQuestion);
+      if(qSection)qSection.style.display='block';
+    } else {
+      if(qSection)qSection.style.display='none';
+    }
+  }
+}
+
+function verifySecretAnswer(){
+  const admin=State.users.find(u=>u.role==='admin')||State.users[0];if(!admin)return;
+  const answer=document.getElementById('eu-secret-answer').value.trim().toLowerCase();
+  const notif=document.getElementById('eu-notif');
+  if(answer===admin.secretAnswer){
+    document.getElementById('eu-old-pass').value=admin.password;
+    document.getElementById('forgot-pass-section').style.display='none';
+    notif.innerHTML='<div class="notif-item notif-ok">✅ تم التحقق! يمكنك الآن تغيير الرمز السري</div>';
+    Snd.ok();
+  } else {
+    notif.innerHTML='<div class="notif-item notif-er">❌ الجواب غير صحيح</div>';
+    Snd.err();
+  }
+}
+
+function verifyEmergencyCode(){
+  const admin=State.users.find(u=>u.role==='admin')||State.users[0];if(!admin)return;
+  const code=document.getElementById('eu-emergency-code').value.trim();
+  const notif=document.getElementById('eu-notif');
+  if(code&&code===admin.emergencyCode){
+    document.getElementById('eu-old-pass').value=admin.password;
+    document.getElementById('forgot-pass-section').style.display='none';
+    notif.innerHTML='<div class="notif-item notif-ok">✅ رمز الطوارئ صحيح! يمكنك الآن تغيير الرمز السري</div>';
+    Snd.ok();
+  } else {
+    notif.innerHTML='<div class="notif-item notif-er">❌ رمز الطوارئ غير صحيح</div>';
+    Snd.err();
+  }
 }
 
 // Keep old functions for compatibility
@@ -3626,7 +3732,10 @@ function renderExpTable(){
       <td>${e.note||'-'}</td>
       <td style="font-weight:700;color:var(--wa)">${(e.amount||0).toFixed(2)} ${cur}</td>
       <td style="color:var(--mu);font-size:.82rem">${e.date?new Date(e.date).toLocaleDateString(l==='fr'?'fr-FR':'ar-DZ'):'-'}</td>
-      <td><button class="btn btn-sm btn-er" onclick="deleteExpense('${e.id}')">${t('btn_delete')}</button></td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-sm btn-pr" onclick="editExpense('${e.id}')">${t('btn_edit')}</button>
+        <button class="btn btn-sm btn-er" onclick="deleteExpense('${e.id}')">${t('btn_delete')}</button>
+      </td>
     </tr>`;
   }).join(''):`<tr><td colspan="5" style="text-align:center;padding:18px;color:var(--mu)">0</td></tr>`;
 }
@@ -3637,11 +3746,41 @@ function saveExpense(){
   const amount=parseFloat(document.getElementById('exp-amount').value)||0;
   const date=document.getElementById('exp-date').value||new Date().toISOString().slice(0,10);
   if(!amount){toast(t('prod_required'),'er');Snd.err();return;}
-  State.externalDebts.push({id:Date.now().toString(),isExpense:true,expCategory:cat,note,amount,paid:amount,remaining:0,date:new Date(date).toISOString()});
-  saveState();document.getElementById('expense-form').style.display='none';
+  const form=document.getElementById('expense-form');
+  const editId=form.dataset.editId;
+  if(editId){
+    // وضع التعديل
+    const idx=State.externalDebts.findIndex(d=>String(d.id)===String(editId));
+    if(idx>-1){
+      State.externalDebts[idx]={...State.externalDebts[idx],expCategory:cat,note,amount,paid:amount,remaining:0,date:new Date(date).toISOString()};
+    }
+    delete form.dataset.editId;
+    const saveBtn=form.querySelector('.btn-wa');
+    if(saveBtn)saveBtn.textContent=t('btn_save');
+  } else {
+    // وضع الإضافة
+    State.externalDebts.push({id:Date.now().toString(),isExpense:true,expCategory:cat,note,amount,paid:amount,remaining:0,date:new Date(date).toISOString()});
+  }
+  saveState();form.style.display='none';
   ['exp-note','exp-amount'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   renderExtDebts();extTab('expenses',null);
   toast(t('toast_saved'),'ok');Snd.ok();
+}
+
+function editExpense(id){
+  const e=State.externalDebts.find(d=>String(d.id)===String(id));if(!e)return;
+  // أظهر النموذج ومأله بالبيانات
+  document.getElementById('expense-form').style.display='block';
+  document.getElementById('exp-category').value=e.expCategory||'other';
+  document.getElementById('exp-note').value=e.note||'';
+  document.getElementById('exp-amount').value=e.amount||'';
+  document.getElementById('exp-date').value=e.date?e.date.slice(0,10):new Date().toISOString().slice(0,10);
+  // حفظ id التعديل
+  document.getElementById('expense-form').dataset.editId=id;
+  // تغيير نص زر الحفظ
+  const saveBtn=document.querySelector('#expense-form .btn-wa');
+  if(saveBtn)saveBtn.textContent='💾 تحديث';
+  document.getElementById('expense-form').scrollIntoView({behavior:'smooth'});
 }
 
 function deleteExpense(id){
