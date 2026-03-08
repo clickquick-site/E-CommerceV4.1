@@ -1454,7 +1454,7 @@ const T={
     btn_pay_full:'تسديد كامل',btn_pay_partial:'تسديد جزئي',
     col_address:'العنوان',col_company:'الشركة',
     tab_day:'اليوم',tab_week:'الاسبوع',tab_month:'الشهر',tab_year:'السنة',tab_products_rep:'تقارير المنتجات',
-    lbl_daily_income:'المدخول اليومي',lbl_buy_total:'اجمالي الشراء',
+    lbl_daily_income:'المدخول اليومي',lbl_buy_total:'تكلفة البضاعة',
     lbl_sell_total:'اجمالي البيع',lbl_profit:'الفائدة',lbl_items_sold:'المنتجات المباعة',
     lbl_total_debts:'اجمالي الديون',lbl_debtors:'المدينون',
     lbl_deliveries:'التوصيلات',lbl_delivery_total:'مبالغ التوصيل',
@@ -1533,7 +1533,7 @@ const T={
     btn_pay_full:'Payer tout',btn_pay_partial:'Paiement partiel',
     col_address:'Adresse',col_company:'Société',
     tab_day:'Aujourd\'hui',tab_week:'Semaine',tab_month:'Mois',tab_year:'Année',tab_products_rep:'Rapports produits',
-    lbl_daily_income:'Revenus journaliers',lbl_buy_total:'Total achats',
+    lbl_daily_income:'Revenus journaliers',lbl_buy_total:'Coût des marchandises',
     lbl_sell_total:'Total ventes',lbl_profit:'Bénéfice',lbl_items_sold:'Articles vendus',
     lbl_total_debts:'Total dettes',lbl_debtors:'Débiteurs',
     lbl_deliveries:'Livraisons',lbl_delivery_total:'Montants en cours',
@@ -2708,7 +2708,7 @@ function renderBusiness(){
   
   const todaySales=State.todaySales;
   const rev=todaySales.filter(s=>s.sourceType!=='debt_ext').reduce((s,i)=>s+(i.total||0),0);
-  const buyTotalDay=todaySales.filter(s=>s.type==='cash').reduce((s,i)=>s+(i.buyTotal||0),0);
+  const buyTotalDay=todaySales.filter(s=>s.sourceType!=='debt_ext').reduce((s,i)=>s+(i.buyTotal||0),0);
   const profit=todaySales.filter(s=>s.sourceType!=='debt_ext').reduce((s,i)=>s+(i.profit||0),0);
   const items=todaySales.reduce((s,i)=>s+(i.items?.reduce((a,b)=>a+b.qty,0)||0),0);
   // Debts
@@ -2745,6 +2745,7 @@ function renderBusiness(){
     <div class="stat-card" style="border-left:3px solid var(--er)">
       <div class="sc-val" style="color:var(--er)">${buyTotalDay.toFixed(2)} ${cur}</div>
       <div class="sc-lbl">${t('lbl_buy_total')}</div>
+      <div style="font-size:.62rem;color:var(--mu);margin-top:2px">${l==='fr'?'Prix de revient total':'سعر الشراء الإجمالي'}</div>
     </div>
     <div class="stat-card" style="border-left:3px solid var(--ok)">
       <div class="sc-val" style="color:var(--ok)">${profit.toFixed(2)} ${cur}</div>
