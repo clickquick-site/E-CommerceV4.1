@@ -4324,7 +4324,7 @@ document.addEventListener('keydown',function(e){
     const openMod=document.querySelector('.modal-overlay.open');
     if(openMod){openMod.classList.remove('open');return;}
   }
-});
+  // Auto VKB on focus
   if(!State.settings.autoVKB)return;
   if(['INPUT','TEXTAREA'].includes(e.target.tagName)&&e.target.type!=='file'&&e.target.type!=='checkbox'){
     if(!vkbVisible){toggleVKB();}
