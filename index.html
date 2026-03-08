@@ -1998,11 +1998,16 @@ function renderCart(){
   }
   c.innerHTML='';
   State.cart.forEach((item,idx)=>{
+    const prod=State.products.find(p=>p.id===item.id);
+    const maxQty=prod?prod.qty:999;
     const row=document.createElement('div');row.className='cart-item';
-    row.innerHTML=`<span class="ci-name">${item.name}</span>
+    row.innerHTML=`<div style="flex:1;min-width:0;overflow:hidden">
+  <div class="ci-name" style="font-size:.82rem;font-weight:700">${item.name}</div>
+  ${item.type?`<div style="font-size:.7rem;color:var(--pr);font-weight:600">${item.type}</div>`:''}
+</div>
 <div class="qty-ctrl">
   <button class="qty-btn" onclick="chQty(${idx},-1)">-</button>
-  <input class="qty-inp" type="number" value="${item.qty}" min="1" onchange="setQty(${idx},this.value)">
+  <input class="qty-inp" type="number" value="${item.qty}" min="1" max="${maxQty}" onchange="setQty(${idx},this.value)">
   <button class="qty-btn" onclick="chQty(${idx},1)">+</button>
 </div>
 <input class="price-inp" type="number" value="${item.price}" onchange="setPrice(${idx},this.value)">
@@ -2021,7 +2026,12 @@ function chQty(idx,d){
   item.qty=nq;item.total=nq*item.price;DB.s('cart_saved',State.cart);renderCart();
 }
 function setQty(idx,v){
-  const q=Math.max(1,parseInt(v)||1);State.cart[idx].qty=q;State.cart[idx].total=q*State.cart[idx].price;
+  const item=State.cart[idx];
+  const prod=State.products.find(p=>p.id===item.id);
+  const maxQty=prod?prod.qty:999;
+  const q=Math.min(maxQty,Math.max(1,parseInt(v)||1));
+  if(prod&&q>=maxQty)toast(t('toast_cart_max')+maxQty,'wa');
+  item.qty=q;item.total=q*item.price;
   DB.s('cart_saved',State.cart);renderCart();
 }
 function setPrice(idx,v){
@@ -2891,14 +2901,14 @@ function renderWilayasReport(){
   <!-- الرسومان جنباً إلى جنب -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
     <!-- رسم الأعمدة -->
-    <div style="background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:14px">
+    <div style="background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:14px;overflow:hidden">
       <div style="font-size:.82rem;font-weight:700;color:var(--mu);margin-bottom:12px;text-align:center">📊 الطلبات حسب الولاية</div>
-      <canvas id="wilaya-bar" height="220"></canvas>
+      <div style="position:relative;height:200px;width:100%"><canvas id="wilaya-bar"></canvas></div>
     </div>
     <!-- رسم الدائرة -->
-    <div style="background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:14px">
+    <div style="background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:14px;overflow:hidden">
       <div style="font-size:.82rem;font-weight:700;color:var(--mu);margin-bottom:12px;text-align:center">🥧 النسب المئوية</div>
-      <canvas id="wilaya-pie" height="220"></canvas>
+      <div style="position:relative;height:200px;width:100%"><canvas id="wilaya-pie"></canvas></div>
     </div>
   </div>
 
@@ -2949,8 +2959,8 @@ function initWilayaCharts(){
           responsive:true,maintainAspectRatio:false,
           plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw} طلب`}}},
           scales:{
-            x:{ticks:{color:'#6b7280',font:{size:10},maxRotation:35},grid:{display:false}},
-            y:{ticks:{color:'#6b7280',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}
+            x:{ticks:{color:'#6b7280',font:{size:9},maxRotation:40},grid:{display:false}},
+            y:{ticks:{color:'#6b7280',font:{size:9},stepSize:1},grid:{color:'rgba(0,0,0,.05)'}}
           }
         }
       });
@@ -2961,11 +2971,11 @@ function initWilayaCharts(){
     if(pieCtx&&window.Chart){
       new Chart(pieCtx,{
         type:'doughnut',
-        data:{labels,datasets:[{data:values,backgroundColor:colors,borderWidth:3,borderColor:'var(--card)',hoverOffset:8}]},
+        data:{labels,datasets:[{data:values,backgroundColor:colors,borderWidth:3,borderColor:'var(--card)',hoverOffset:6}]},
         options:{
           responsive:true,maintainAspectRatio:false,
           plugins:{
-            legend:{position:'bottom',labels:{color:'#6b7280',font:{size:10},boxWidth:12,padding:8}},
+            legend:{position:'bottom',labels:{color:'#6b7280',font:{size:9},boxWidth:10,padding:6}},
             tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} طلب (${data[ctx.dataIndex].pct}%)`}}
           }
         }
